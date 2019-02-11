@@ -17,7 +17,7 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         
         // Request notifications permissions
-        notificationCenter.requestAuthorization(options: [.alert, .sound]) { (granted, error) in
+        notificationCenter.requestAuthorization(options: [.badge, .alert, .sound]) { (granted, error) in
             if !granted {
                 print("User has declined notifications")
             }
@@ -49,6 +49,7 @@ class ViewController: UIViewController {
             
             // Create a trigger to show the notification in 5 seconds
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
+            //let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 60, repeats: true) //hehe
             
             // Create a request
             //let identifier = UUID().uuidString
