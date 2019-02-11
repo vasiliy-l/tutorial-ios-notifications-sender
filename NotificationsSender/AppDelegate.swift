@@ -66,15 +66,14 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         case "DELETE_ACTION":
             print("Delete action selected")
         case UNNotificationDismissActionIdentifier:
-            print("Dismiss system action (X button)")
+            print("The user dismissed the notification without taking action (X button)")
         case UNNotificationDefaultActionIdentifier:
-            print("Default system action (notification tapped)")
+            print("The user launched the app (notification tapped)")
         default:
             print("Unknown action selected")
         }
         
         completionHandler()
     }
-    
 }
 
