@@ -13,10 +13,11 @@ import UserNotifications
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-
+    let notifications = Notifications()
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        UNUserNotificationCenter.current().delegate = self
+        notifications.notificationRequest()
+        notifications.notificationCenter.delegate = notifications
         
         return true
     }
@@ -41,39 +42,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
-    }
-}
-
-extension AppDelegate: UNUserNotificationCenterDelegate {
-    
-    // Show notifications when the app in foreground
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        completionHandler([.alert, .sound])
-    }
-    
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        
-        guard response.notification.request.identifier == "LOCAL_NOTIFICATION" else {
-            return
-        }
-        print("Handling notifications with the Local Notification Identifier")
-        
-        switch response.actionIdentifier {
-        case "ACCEPT_ACTION":
-            print("Accept action selected")
-        case "SNOOZE_ACTION":
-            print("Snooze action selected")
-        case "DELETE_ACTION":
-            print("Delete action selected")
-        case UNNotificationDismissActionIdentifier:
-            print("The user dismissed the notification without taking action (X button)")
-        case UNNotificationDefaultActionIdentifier:
-            print("The user launched the app (notification tapped)")
-        default:
-            print("Unknown action selected")
-        }
-        
-        completionHandler()
     }
 }
 
