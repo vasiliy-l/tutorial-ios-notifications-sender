@@ -20,6 +20,7 @@ private let NotificationDeleteActionIdentifier = "DELETE_ACTION"
 class Notifications: NSObject {
     
     static let NotificationRequestIdentifier = "NOTIFICATION_REQUEST"
+    static let BadgeNotificationRequestIdentifier = "BADGE_NOTIFICATION_REQUEST"
     
     var notificationCenter = UNUserNotificationCenter.current()
     
@@ -45,7 +46,10 @@ class Notifications: NSObject {
         }
     }
     
-    func scheduleNotification(withTimeInterval: TimeInterval, withSound: Bool, repeating: Bool) {
+    func scheduleNotification(withTitle: String, withBody: String,
+                              withRequestID: String,
+                              withTimeInterval: TimeInterval, withSound: Bool,
+                              repeating: Bool, withBadgeNumber: Int?) {
         notificationCenter.getNotificationSettings { [unowned notificationCenter] settings in
             guard settings.authorizationStatus == .authorized else {
                 print("App is not authorized to send notifications!")
@@ -54,10 +58,13 @@ class Notifications: NSObject {
             
             // Fill notification content
             let content = UNMutableNotificationContent()
-            content.title = "Time Interval Notification"
-            content.body = "Just wanna say hello to you"
+            content.title = withTitle
+            content.body = withBody
             if withSound {
               content.sound = UNNotificationSound.default
+            }
+            if let badgeNumber = withBadgeNumber {
+                content.badge = NSNumber(value: badgeNumber)
             }
             content.categoryIdentifier = NotificationCategoryIdentifier // bind defined actions with the notification
             
@@ -65,7 +72,7 @@ class Notifications: NSObject {
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: withTimeInterval, repeats: repeating)
             
             // Create a request
-            let request = UNNotificationRequest(identifier: Notifications.NotificationRequestIdentifier, content: content, trigger: trigger)
+            let request = UNNotificationRequest(identifier: withRequestID, content: content, trigger: trigger)
             
             // Schedule the request with the system
             notificationCenter.add(request) { (error) in
@@ -77,8 +84,8 @@ class Notifications: NSObject {
         }
     }
     
-    func unscheduleNotification() {
-        notificationCenter.removePendingNotificationRequests(withIdentifiers: [Notifications.NotificationRequestIdentifier])
+    func unscheduleNotification(withRequestID: String) {
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: [withRequestID])
     }
 }
 
@@ -86,12 +93,13 @@ extension Notifications: UNUserNotificationCenterDelegate {
     
     // Show notifications when the app in foreground
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        completionHandler([.alert, .sound])
+        completionHandler([.alert, .sound, .badge]) // perform notification with the alert, sound and badge options which were set
     }
     
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         
-        guard response.notification.request.identifier == Notifications.NotificationRequestIdentifier else {
+        if (response.notification.request.identifier != Notifications.NotificationRequestIdentifier
+            && response.notification.request.identifier != Notifications.BadgeNotificationRequestIdentifier) {
             print("Unknown notification ID")
             return
         }

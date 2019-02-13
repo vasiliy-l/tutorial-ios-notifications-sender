@@ -20,6 +20,9 @@ class ViewController: UIViewController {
         super.viewDidLoad()
     }
     
+    
+    // MARK: - Notifications
+    
     @IBAction func scheduleNotificationButtonPressed(_ sender: UIButton) {
         guard let timeString = notificationTimeField.text,
               let timeInterval = Double.init(timeString) else {
@@ -27,17 +30,28 @@ class ViewController: UIViewController {
                 return
         }
         
-        appDelegate.notifications.scheduleNotification(withTimeInterval: timeInterval, withSound: withSoundSwitch.isOn, repeating: repeatSwitch.isOn)
+        appDelegate.notifications.scheduleNotification(
+            withTitle: "Time Interval Notification",
+            withBody: "Just wanna say hello to you!",
+            withRequestID: Notifications.NotificationRequestIdentifier,
+            withTimeInterval: timeInterval,
+            withSound: withSoundSwitch.isOn,
+            repeating: repeatSwitch.isOn,
+            withBadgeNumber: nil)
     }
     
     @IBAction func clearNotificationButtonPressed(_ sender: UIButton) {
-        appDelegate.notifications.unscheduleNotification()
+        appDelegate.notifications.unscheduleNotification(withRequestID: Notifications.NotificationRequestIdentifier)
         
         notificationTimeField.text = "20"
         withSoundSwitch.isOn = false
         repeatSwitch.isOn = false
     }
     
+    /**
+     Repeating notification cannot be scheduled with time interval less than 60 seconds,
+     so we need to check and undate Time Interval field value accordingly.
+    */
     @IBAction func repeatSwitchUpdated(_ sender: UISwitch) {
         // Try to parse Time Interval field value
         var timeInterval: Double?
@@ -51,10 +65,24 @@ class ViewController: UIViewController {
         }
     }
     
-}
-
-extension ViewController {
     
-
+    // MARK: - Application badge
+    
+    @IBAction func increaseBadgeNumberButtonPressed(_ sender: UIButton) {
+        let nextBadgeNumber = UIApplication.shared.applicationIconBadgeNumber + 1
+        appDelegate.notifications.scheduleNotification(
+            withTitle: "Notification with badge",
+            withBody: "+1 to application badge value. Check it!",
+            withRequestID: Notifications.BadgeNotificationRequestIdentifier,
+            withTimeInterval: 5,
+            withSound: false,
+            repeating: false,
+            withBadgeNumber: nextBadgeNumber)
+    }
+    
+    @IBAction func clearBadgeNumberButtonPressed(_ sender: UIButton) {
+        appDelegate.notifications.unscheduleNotification(withRequestID: Notifications.BadgeNotificationRequestIdentifier)
+        UIApplication.shared.applicationIconBadgeNumber = 0
+    }
 }
 
