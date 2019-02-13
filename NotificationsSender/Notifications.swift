@@ -9,7 +9,7 @@
 import Foundation
 import UserNotifications
 
-private let TimeIntervalRequestIdentifier = "TIME_INTERVAL_NOTIFICATION_REQUEST"
+
 
 private let NotificationCategoryIdentifier = "NOTIFICATION_ACTION"
 
@@ -18,6 +18,8 @@ private let NotificationSnoozeActionIdentifier = "SNOOZE_ACTION"
 private let NotificationDeleteActionIdentifier = "DELETE_ACTION"
 
 class Notifications: NSObject {
+    
+    static let NotificationRequestIdentifier = "NOTIFICATION_REQUEST"
     
     var notificationCenter = UNUserNotificationCenter.current()
     
@@ -43,7 +45,7 @@ class Notifications: NSObject {
         }
     }
     
-    func scheduleNotification() {
+    func scheduleNotification(withTimeInterval: TimeInterval, withSound: Bool, repeating: Bool) {
         notificationCenter.getNotificationSettings { [unowned notificationCenter] settings in
             guard settings.authorizationStatus == .authorized else {
                 print("App is not authorized to send notifications!")
@@ -54,15 +56,16 @@ class Notifications: NSObject {
             let content = UNMutableNotificationContent()
             content.title = "Time Interval Notification"
             content.body = "Just wanna say hello to you"
-            content.sound = UNNotificationSound.default
+            if withSound {
+              content.sound = UNNotificationSound.default
+            }
             content.categoryIdentifier = NotificationCategoryIdentifier // bind defined actions with the notification
             
             // Create a trigger to show the notification in 5 seconds
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
-            //let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 60, repeats: true) //he-he
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: withTimeInterval, repeats: repeating)
             
             // Create a request
-            let request = UNNotificationRequest(identifier: TimeIntervalRequestIdentifier, content: content, trigger: trigger)
+            let request = UNNotificationRequest(identifier: Notifications.NotificationRequestIdentifier, content: content, trigger: trigger)
             
             // Schedule the request with the system
             notificationCenter.add(request) { (error) in
@@ -72,6 +75,10 @@ class Notifications: NSObject {
                 }
             }
         }
+    }
+    
+    func unscheduleNotification() {
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: [Notifications.NotificationRequestIdentifier])
     }
 }
 
@@ -84,7 +91,7 @@ extension Notifications: UNUserNotificationCenterDelegate {
     
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         
-        guard response.notification.request.identifier == TimeIntervalRequestIdentifier else {
+        guard response.notification.request.identifier == Notifications.NotificationRequestIdentifier else {
             print("Unknown notification ID")
             return
         }
