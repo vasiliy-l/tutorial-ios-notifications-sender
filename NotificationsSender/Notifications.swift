@@ -11,7 +11,7 @@ import UserNotifications
 
 
 
-private let NotificationCategoryIdentifier = "NOTIFICATION_ACTION"
+private let NotificationCategoryIdentifier = "MY_NOTIFICATION_CATEGORY"
 
 private let NotificationAcceptActionIdentifier = "ACCEPT_ACTION"
 private let NotificationSnoozeActionIdentifier = "SNOOZE_ACTION"
@@ -27,12 +27,14 @@ class Notifications: NSObject {
     override init() {
         super.init()
         
-        let acceptAction = UNNotificationAction(identifier: NotificationAcceptActionIdentifier, title: "Accept", options: [.foreground]) // opens the app
-        let snoozeAction = UNNotificationAction(identifier: NotificationSnoozeActionIdentifier, title: "Snooze", options: UNNotificationActionOptions(rawValue: 0))
-        let deleteAction = UNNotificationAction(identifier: NotificationDeleteActionIdentifier, title: "Delete", options: [.destructive]) // marked as destructive
+        let actions = [
+            UNNotificationAction(identifier: NotificationAcceptActionIdentifier, title: "Accept", options: [.foreground]), // opens the app
+            UNNotificationAction(identifier: NotificationSnoozeActionIdentifier, title: "Snooze", options: UNNotificationActionOptions(rawValue: 0)),
+            UNNotificationAction(identifier: NotificationDeleteActionIdentifier, title: "Delete", options: [.destructive]) // marked as destructive
+        ]
         
-        let notificationActionCategory = UNNotificationCategory(identifier: NotificationCategoryIdentifier, actions: [acceptAction, snoozeAction, deleteAction], intentIdentifiers: [], hiddenPreviewsBodyPlaceholder: "", options: [.customDismissAction])
-        notificationCenter.setNotificationCategories([notificationActionCategory])
+        let notificationCategory = UNNotificationCategory(identifier: NotificationCategoryIdentifier, actions: actions, intentIdentifiers: [], hiddenPreviewsBodyPlaceholder: "", options: [.customDismissAction])
+        notificationCenter.setNotificationCategories([notificationCategory])
     }
     
     /**
