@@ -14,6 +14,10 @@ class NotificationViewController: UIViewController, UNNotificationContentExtensi
 
     @IBOutlet var label: UILabel!
     
+    let notifications = Notifications()
+    var originalNotification: UNNotificationContent?
+    static var retiesAmount = 0
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any required interface initialization here.
@@ -32,6 +36,8 @@ class NotificationViewController: UIViewController, UNNotificationContentExtensi
     }
 
     func didReceive(_ notification: UNNotification) {
+        originalNotification = notification.request.content
+        
         self.label.text = notification.request.content.body
     }
     
@@ -46,45 +52,71 @@ class NotificationViewController: UIViewController, UNNotificationContentExtensi
             
         // snooze actions
         case "SNOOZE_3SEC":
-            print("Snooze for 3 secs selected, re-schedule notification")
-            
-            // TODO: - move to some shared library?
-            let notificationCenter = UNUserNotificationCenter.current()
-            let content = UNMutableNotificationContent()
-            content.title = "Hello again!"
-            content.body = ":D"
-            content.categoryIdentifier = "MY_NOTIFICATION_CATEGORY"
-            
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 3, repeats: false)
-            let request = UNNotificationRequest(identifier: "REPEATED_NOTIFY", content: content, trigger: trigger)
-            
-            notificationCenter.add(request) { (error) in
-                if error != nil {
-                    print("Unable to re-schedule notification!")
-                    print(error!.localizedDescription)
-                }
-            }
-            
+            print("Snooze for 3 secs selected")
+            NotificationViewController.retiesAmount += 1
+            snoozeNotification(time: 3)
             completion(.dismiss)
         case "SNOOZE_1MIN":
             print("Snooze for 1 minute selected")
+            NotificationViewController.retiesAmount += 1
+            snoozeNotification(time: 60)
             completion(.dismiss)
         case "SNOOZE_2MIN":
             print("Snooze for 2 minutes selected")
+            NotificationViewController.retiesAmount += 1
+            snoozeNotification(time: 120)
             completion(.dismiss)
-        
+        case "SNOOZE_NO":
+            openApp()
+            
         default:
             dismissNotification()
-            
         }
     }
     
     func showSnoozeActions() {
-        let actions = [
-            UNNotificationAction(identifier: "SNOOZE_3SEC", title: "Snooze for 3 secs", options: []),
-            UNNotificationAction(identifier: "SNOOZE_1MIN", title: "Snooze for 1 min", options: []),
-            UNNotificationAction(identifier: "SNOOZE_2MIN", title: "Snooze for 2 mins", options: []),
+        var actions: [UNNotificationAction]
+        
+        if (NotificationViewController.retiesAmount < 3) {
+            actions = [
+                UNNotificationAction(
+                    identifier: "SNOOZE_3SEC",
+                    title: "Snooze for 3 secs",
+                    options: []),
+                UNNotificationAction(
+                    identifier: "SNOOZE_1MIN",
+                    title: "Snooze for 1 min",
+                    options: []),
+                UNNotificationAction(
+                    identifier: "SNOOZE_2MIN",
+                    title: "Snooze for 2 mins",
+                    options: []),
+                ]
+        }
+        else {
+            actions = [
+                UNNotificationAction(
+                    identifier: "SNOOZE_NO",
+                    title: "Ha Ha Ha, No",
+                    options: [.destructive]),
             ]
+            
+            NotificationViewController.retiesAmount = 0
+        }
+        
         extensionContext?.notificationActions = actions
+    }
+    
+    func snoozeNotification(time: TimeInterval) {
+        if let originalNotification = originalNotification {
+            notifications.scheduleNotification(
+                withTitle: originalNotification.title,
+                withBody:  originalNotification.body + " (snoozed \(NotificationViewController.retiesAmount) time)",
+                withRequestID: Notifications.NotificationRequestIdentifier,
+                withTimeInterval: time,
+                withSound: originalNotification.sound != nil,
+                repeating: false,
+                withBadgeNumber: nil)
+        }
     }
 }
